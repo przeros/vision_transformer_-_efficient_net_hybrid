@@ -400,7 +400,7 @@ class VisionTransformer(nn.Module):
         cls = jnp.tile(cls, [n, 1, 1])
         x = jnp.concatenate([cls, x], axis=1)
 
-      x = self.encoder(name='Transformer', **self.transformer)(x, train=train, hidden_size=hidden_size)
+      x = self.encoder(name='Transformer', **self.transformer)(x, train=train, hidden_size=self.hidden_size)
 
     if self.classifier == 'token':
       x = x[:, 0]
