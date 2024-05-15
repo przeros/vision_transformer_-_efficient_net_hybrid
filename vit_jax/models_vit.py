@@ -381,7 +381,7 @@ class VisionTransformer(nn.Module):
       raise ValueError(f'Invalid classifier={self.classifier}')
 
     if self.representation_size is not None:
-      x = MBConv(inp=self.representation_size, oup=self.representation_size, stride=1, expand_ratio=1.0, use_se=True)
+      x = MBConv(inp=self.representation_size, oup=self.representation_size, stride=1, expand_ratio=1.0, use_se=True)(x)
       x = nn.Dense(features=self.representation_size, name='pre_logits')(x)
       x = nn.tanh(x)
     else:
