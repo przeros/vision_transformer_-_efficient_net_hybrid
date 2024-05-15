@@ -208,6 +208,93 @@ class Encoder(nn.Module):
     return encoded
 
 
+class ConvBlock(nn.Module):
+    oup: int
+    kernel: int
+    dtype: Any
+    stride: int = 1
+    groups: int = 1
+    dropout: float = 0.
+    # Whether to do activation
+    act: bool = True
+    has_skip: bool = False
+
+    @nn.compact
+    def __call__(self, x):
+        if self.has_skip:
+            shortcut = x
+        x = nn.Conv(self.oup, kernel_size=(self.kernel, self.kernel),
+                    strides=self.stride, feature_group_count=self.groups,
+                    use_bias=False, param_dtype=self.dtype, dtype=self.dtype, kernel_init=conv_init)(x)
+        mutable = self.is_mutable_collection('batch_stats')
+        if self.dropout != 0.:
+            x = nn.Dropout(rate=self.dropout, deterministic=not mutable)(x)
+        x = nn.BatchNorm(momentum=.9, use_running_average=not mutable, param_dtype=self.dtype, dtype=self.dtype, axis_name='devices')(x)
+        if self.act:
+            x = silu(x)
+        if self.has_skip:
+            return x + shortcut
+        else:
+            return x
+
+
+class DropBlock(nn.Module):
+    dropblock_rate: float = .0
+
+    @nn.compact
+    def __call__(self, x):
+        mutable = self.is_mutable_collection('batch_stats')
+        if mutable:
+            pred = jax.random.bernoulli(self.make_rng('dropout'), p=self.dropblock_rate)
+            return jax.lax.cond(pred, lambda x: 0., lambda x: 1., 0) * x
+        else:
+            return (1 - self.dropblock_rate) * x
+
+
+class MBConv(nn.Module):
+    inp: int
+    oup: int
+    stride: int
+    expand_ratio: float
+    use_se: bool
+    dtype: Any
+    dropout: float = 0.
+    dropblock: float = 0.
+
+    def setup(self):
+        assert self.stride in [1, 2]
+
+        hidden_dim = round(self.inp * self.expand_ratio)
+        self.identity = self.stride == 1 and self.inp == self.oup
+        if self.dropblock != 0:
+            self.DropBlock = DropBlock(dropblock_rate=self.dropblock)
+        if self.use_se:
+            self.conv = nn.Sequential([
+                ConvBlock(oup=hidden_dim, kernel=1, stride=1, dtype=self.dtype, dropout=self.dropout),
+                ConvBlock(oup=hidden_dim, kernel=3, stride=self.stride, groups=hidden_dim, dtype=self.dtype,
+                          dropout=self.dropout),
+                SELayer(inp=self.inp, oup=hidden_dim, dtype=self.dtype),
+                nn.Conv(self.oup, kernel_size=(1, 1), use_bias=False, param_dtype=self.dtype, dtype=self.dtype, kernel_init=conv_init),
+            ])
+        else:
+            self.conv = nn.Sequential([
+                ConvBlock(oup=hidden_dim, kernel=3, stride=self.stride, dtype=self.dtype, dropout=self.dropout),
+                nn.Conv(self.oup, kernel_size=(1, 1), use_bias=False, param_dtype=self.dtype, dtype=self.dtype, kernel_init=conv_init),
+            ])
+        self.bn = nn.BatchNorm(momentum=.9, param_dtype=self.dtype, dtype=self.dtype, axis_name='devices')
+
+    # Well this .remat almost is not doing anything
+    @nn.remat
+    def __call__(self, x):
+        mutable = self.is_mutable_collection('batch_stats')
+        if self.identity:
+            if self.dropblock != 0:
+                return x + self.DropBlock(self.bn(self.conv(x), use_running_average=not mutable))
+            else:
+                return x + self.bn(self.conv(x), use_running_average=not mutable)
+        else:
+            return self.bn(self.conv(x), use_running_average=not mutable)
+
 class VisionTransformer(nn.Module):
   """VisionTransformer."""
 
@@ -294,6 +381,7 @@ class VisionTransformer(nn.Module):
       raise ValueError(f'Invalid classifier={self.classifier}')
 
     if self.representation_size is not None:
+      x = MBConv(inp=self.representation_size, oup=self.representation_size, stride=1, expand_ratio=1.0, use_se=True)
       x = nn.Dense(features=self.representation_size, name='pre_logits')(x)
       x = nn.tanh(x)
     else:
