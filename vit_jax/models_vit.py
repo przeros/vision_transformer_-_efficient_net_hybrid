@@ -195,6 +195,8 @@ class Encoder(nn.Module):
       x = nn.Dropout(rate=self.dropout_rate)(x, deterministic=not train)
 
     # Input Encoder
+    x = MBConv(inp=self.mlp_dim, oup=self.mlp_dim, stride=1, expand_ratio=1.0, use_se=True)(x)
+    x = MBConv(inp=self.mlp_dim, oup=self.mlp_dim, stride=1, expand_ratio=1.0, use_se=True)(x)
     for lyr in range(self.num_layers):
       x = Encoder1DBlock(
           mlp_dim=self.mlp_dim,
@@ -313,6 +315,7 @@ class VisionTransformer(nn.Module):
   def __call__(self, inputs, *, train):
 
     x = inputs
+
     # (Possibly partial) ResNet root.
     if self.resnet is not None:
       width = int(64 * self.resnet.width_factor)
@@ -387,10 +390,6 @@ class VisionTransformer(nn.Module):
       x = IdentityLayer(name='pre_logits')(x)
 
     if self.num_classes:
-      x = MBConv(inp=self.hidden_size, oup=self.hidden_size, stride=1, expand_ratio=1.0,use_se=True)(x)
-      x = MBConv(inp=self.hidden_size, oup=self.hidden_size, stride=1, expand_ratio=1.0, use_se=True)(x)
-      x = MBConv(inp=self.hidden_size, oup=self.hidden_size / 2, stride=1, expand_ratio=0.5, use_se=True)(x)
-      x = MBConv(inp=self.hidden_size / 2, oup=self.hidden_size / 4, stride=1, expand_ratio=0.5, use_se=True)(x)
       x = nn.Dense(
           features=self.num_classes,
           name='head',
