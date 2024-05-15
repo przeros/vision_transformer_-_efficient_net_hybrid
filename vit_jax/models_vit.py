@@ -122,7 +122,7 @@ class Encoder1DBlock(nn.Module):
   attention_dropout_rate: float = 0.1
 
   @nn.compact
-  def __call__(self, inputs, *, deterministic):
+  def __call__(self, inputs, *, deterministic, hidden_size):
     """Applies Encoder1DBlock module.
 
     Args:
@@ -149,8 +149,8 @@ class Encoder1DBlock(nn.Module):
 
     # MLP block.
     y = nn.LayerNorm(dtype=self.dtype)(x)
-    y = MBConv(inp=self.mlp_dim, oup=self.mlp_dim, stride=1, expand_ratio=1.0, use_se=True, dtype=self.dtype)(y)
-    y = MBConv(inp=self.mlp_dim, oup=self.mlp_dim, stride=1, expand_ratio=1.0, use_se=True, dtype=self.dtype)(y)
+    y = MBConv(inp=hidden_size, oup=hidden_size, stride=1, expand_ratio=1.0, use_se=True, dtype=self.dtype)(y)
+    y = MBConv(inp=hidden_size, oup=hidden_size, stride=1, expand_ratio=1.0, use_se=True, dtype=self.dtype)(y)
     y = MlpBlock(
         mlp_dim=self.mlp_dim, dtype=self.dtype, dropout_rate=self.dropout_rate)(
             y, deterministic=deterministic)
@@ -177,7 +177,7 @@ class Encoder(nn.Module):
   add_position_embedding: bool = True
 
   @nn.compact
-  def __call__(self, x, *, train):
+  def __call__(self, x, *, train, hidden_size):
     """Applies Transformer model on the inputs.
 
     Args:
@@ -204,7 +204,7 @@ class Encoder(nn.Module):
           attention_dropout_rate=self.attention_dropout_rate,
           name=f'encoderblock_{lyr}',
           num_heads=self.num_heads)(
-              x, deterministic=not train)
+              x, deterministic=not train, hidden_size=hidden_size)
     encoded = nn.LayerNorm(name='encoder_norm')(x)
 
     return encoded
@@ -400,7 +400,7 @@ class VisionTransformer(nn.Module):
         cls = jnp.tile(cls, [n, 1, 1])
         x = jnp.concatenate([cls, x], axis=1)
 
-      x = self.encoder(name='Transformer', **self.transformer)(x, train=train)
+      x = self.encoder(name='Transformer', **self.transformer)(x, train=train, hidden_size=hidden_size)
 
     if self.classifier == 'token':
       x = x[:, 0]
