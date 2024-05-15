@@ -149,6 +149,8 @@ class Encoder1DBlock(nn.Module):
 
     # MLP block.
     y = nn.LayerNorm(dtype=self.dtype)(x)
+    y = MBConv(inp=self.mlp_dim, oup=self.mlp_dim, stride=1, expand_ratio=1.0, use_se=True, dtype=self.dtype)(y)
+    y = MBConv(inp=self.mlp_dim, oup=self.mlp_dim, stride=1, expand_ratio=1.0, use_se=True, dtype=self.dtype)(y)
     y = MlpBlock(
         mlp_dim=self.mlp_dim, dtype=self.dtype, dropout_rate=self.dropout_rate)(
             y, deterministic=deterministic)
@@ -195,8 +197,6 @@ class Encoder(nn.Module):
       x = nn.Dropout(rate=self.dropout_rate)(x, deterministic=not train)
 
     # Input Encoder
-    x = MBConv(inp=self.mlp_dim, oup=self.mlp_dim, stride=1, expand_ratio=1.0, use_se=True)(x)
-    x = MBConv(inp=self.mlp_dim, oup=self.mlp_dim, stride=1, expand_ratio=1.0, use_se=True)(x)
     for lyr in range(self.num_layers):
       x = Encoder1DBlock(
           mlp_dim=self.mlp_dim,
