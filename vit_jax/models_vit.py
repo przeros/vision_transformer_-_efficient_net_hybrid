@@ -210,6 +210,20 @@ class Encoder(nn.Module):
     return encoded
 
 
+class SELayer(nn.Module):
+    inp: int
+    oup: int
+    dtype: Any
+    reduction: int = 4
+
+    @nn.compact
+    def __call__(self, x):
+        features = _make_divisible(self.inp // self.reduction, 4)
+        y = silu(nn.Conv(features, kernel_size=(1, 1), param_dtype=self.dtype, dtype=self.dtype)(x))
+        y = sigmoid(nn.Conv(self.oup, kernel_size=(1, 1), param_dtype=self.dtype, dtype=self.dtype)(y))
+        return x * y
+
+
 class ConvBlock(nn.Module):
     oup: int
     kernel: int
