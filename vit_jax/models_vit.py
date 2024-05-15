@@ -210,6 +210,9 @@ class Encoder(nn.Module):
     return encoded
 
 
+conv_init = nn.initializers.variance_scaling(2., mode='fan_out', distribution="truncated_normal", dtype=dtype)
+dense_init = nn.initializers.variance_scaling(1./3, mode='fan_out', distribution="truncated_normal", dtype=dtype)
+
 class SELayer(nn.Module):
     inp: int
     oup: int
