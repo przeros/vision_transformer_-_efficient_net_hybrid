@@ -213,7 +213,15 @@ class Encoder(nn.Module):
 dtype = jnp.bfloat16
 conv_init = nn.initializers.variance_scaling(2., mode='fan_out', distribution="truncated_normal", dtype=dtype)
 dense_init = nn.initializers.variance_scaling(1./3, mode='fan_out', distribution="truncated_normal", dtype=dtype)
-silu_t = lambda x : x * torch.sigmoid(x)
+
+def _make_divisible(v, divisor, min_value=None):
+    if min_value is None:
+        min_value = divisor
+    new_v = max(min_value, int(v + divisor / 2) // divisor * divisor)
+    # Make sure that round down does not go down by more than 10%.
+    if new_v < 0.9 * v:
+        new_v += divisor
+    return new_v
 
 
 class SELayer(nn.Module):
