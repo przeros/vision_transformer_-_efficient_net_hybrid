@@ -253,7 +253,7 @@ class ConvBlock(nn.Module):
     def __call__(self, x):
         if self.has_skip:
             shortcut = x
-        x = nn.Conv(self.oup, kernel_size=(3, 3),
+        x = nn.Conv(self.oup, kernel_size=(self.kernel, self.kernel),
                     strides=self.stride, feature_group_count=self.groups,
                     use_bias=False, param_dtype=self.dtype, dtype=self.dtype, kernel_init=conv_init)(x)
         mutable = self.is_mutable_collection('batch_stats')
