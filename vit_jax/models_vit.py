@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from typing import Any, Callable, Optional, Tuple, Type
-
+from jax.nn import silu, sigmoid
 import flax.linen as nn
 import jax.numpy as jnp
 
@@ -213,6 +213,7 @@ class Encoder(nn.Module):
 dtype = jnp.bfloat16
 conv_init = nn.initializers.variance_scaling(2., mode='fan_out', distribution="truncated_normal", dtype=dtype)
 dense_init = nn.initializers.variance_scaling(1./3, mode='fan_out', distribution="truncated_normal", dtype=dtype)
+silu_t = lambda x : x * torch.sigmoid(x)
 
 
 class SELayer(nn.Module):
