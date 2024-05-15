@@ -253,7 +253,7 @@ class ConvBlock(nn.Module):
     def __call__(self, x):
         if self.has_skip:
             shortcut = x
-        x = nn.Conv(self.oup, kernel_size=(self.kernel, self.kernel),
+        x = nn.Conv(self.oup, kernel_size=(3, 3),
                     strides=self.stride, feature_group_count=self.groups,
                     use_bias=False, param_dtype=self.dtype, dtype=self.dtype, kernel_init=conv_init)(x)
         mutable = self.is_mutable_collection('batch_stats')
@@ -301,8 +301,7 @@ class MBConv(nn.Module):
         if self.use_se:
             self.conv = nn.Sequential([
                 ConvBlock(oup=hidden_dim, kernel=1, stride=1, dtype=self.dtype, dropout=self.dropout),
-                ConvBlock(oup=hidden_dim, kernel=3, stride=self.stride, groups=hidden_dim, dtype=self.dtype,
-                          dropout=self.dropout),
+                ConvBlock(oup=hidden_dim, kernel=3, stride=self.stride, groups=hidden_dim, dtype=self.dtype, dropout=self.dropout),
                 SELayer(inp=self.inp, oup=hidden_dim, dtype=self.dtype),
                 nn.Conv(self.oup, kernel_size=(1, 1), use_bias=False, param_dtype=self.dtype, dtype=self.dtype, kernel_init=conv_init),
             ])
