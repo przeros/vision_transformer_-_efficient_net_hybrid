@@ -383,8 +383,8 @@ class VisionTransformer(nn.Module):
         padding='VALID',
         name='embedding')(
             x)
-    x = MBConv(inp=self.hidden_size, oup=self.hidden_size, stride=1, expand_ratio=0.5, use_se=True, dtype=dtype)(x)
-    x = MBConv(inp=self.hidden_size, oup=self.hidden_size, stride=1, expand_ratio=0.5, use_se=True, dtype=dtype)(x)
+    x = MBConv(inp=self.hidden_size, oup=self.hidden_size, stride=1, expand_ratio=1.0, use_se=True, dtype=dtype)(x)
+    x = MBConv(inp=self.hidden_size, oup=self.hidden_size, stride=1, expand_ratio=1.0, use_se=True, dtype=dtype)(x)
 
     # Here, x is a grid of embeddings.
 
