@@ -383,8 +383,8 @@ class VisionTransformer(nn.Module):
         padding='VALID',
         name='embedding')(
             x)
-    x = MBConv(inp=self.hidden_size, oup=self.hidden_size, stride=1, expand_ratio=0.5, use_se=True, dtype=self.dtype)(x)
-    x = MBConv(inp=self.hidden_size, oup=self.hidden_size, stride=1, expand_ratio=0.5, use_se=True, dtype=self.dtype)(x)
+    x = MBConv(inp=self.hidden_size, oup=self.hidden_size, stride=1, expand_ratio=0.5, use_se=True, dtype=dtype)(x)
+    x = MBConv(inp=self.hidden_size, oup=self.hidden_size, stride=1, expand_ratio=0.5, use_se=True, dtype=dtype)(x)
 
     # Here, x is a grid of embeddings.
 
@@ -416,8 +416,8 @@ class VisionTransformer(nn.Module):
     else:
       x = IdentityLayer(name='pre_logits')(x)
 
-    x = MBConv(inp=self.hidden_size, oup=self.hidden_size / 2, stride=1, expand_ratio=0.5, use_se=True, dtype=self.dtype)(x)
-    x = MBConv(inp=self.hidden_size / 2, oup=self.hidden_size / 4, stride=1, expand_ratio=0.5, use_se=True, dtype=self.dtype)(x)
+    x = MBConv(inp=self.hidden_size, oup=self.hidden_size / 2, stride=1, expand_ratio=0.5, use_se=True, dtype=dtype)(x)
+    x = MBConv(inp=self.hidden_size / 2, oup=self.hidden_size / 4, stride=1, expand_ratio=0.5, use_se=True, dtype=dtype)(x)
     if self.num_classes:
       x = nn.Dense(
           features=self.num_classes,
