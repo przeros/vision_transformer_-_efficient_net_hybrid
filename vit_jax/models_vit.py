@@ -135,7 +135,7 @@ class Encoder1DBlock(nn.Module):
 
     # Attention block.
     assert inputs.ndim == 3, f'Expected (batch, seq, hidden) got {inputs.shape}'
-    x = nn.LayerNorm(dtype=self.dtype)(x)
+    x = nn.LayerNorm(dtype=self.dtype)(inputs)
     x = nn.MultiHeadDotProductAttention(
         dtype=self.dtype,
         kernel_init=nn.initializers.xavier_uniform(),
