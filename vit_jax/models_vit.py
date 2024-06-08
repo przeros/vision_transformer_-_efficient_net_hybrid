@@ -415,8 +415,8 @@ class VisionTransformer(nn.Module):
       x = IdentityLayer(name='pre_logits')(x)
 
     if self.num_classes:
-      x = MBConv(inp=self.hidden_size, oup=self.hidden_size / 2, stride=1, expand_ratio=0.5, use_se=True, dtype=dtype)(x)
-      x = MBConv(inp=self.hidden_size / 2, oup=self.hidden_size / 4, stride=1, expand_ratio=0.5, use_se=True, dtype=dtype)(x)
+      x = MBConv(inp=self.hidden_size, oup=self.hidden_size / 2, stride=1, expand_ratio=0.5, use_se=True)(x)
+      x = MBConv(inp=self.hidden_size / 2, oup=self.hidden_size / 4, stride=1, expand_ratio=0.5, use_se=True)(x)
       x = nn.Dense(
           features=self.num_classes,
           name='head',
