@@ -42,7 +42,7 @@ class AddPositionEmbs(nn.Module):
   """
 
   posemb_init: Callable[[PRNGKey, Shape, Dtype], Array]
-  param_dtype: Dtype = jnp.float32
+  param_dtype: Dtype = jnp.float16
 
   @nn.compact
   def __call__(self, inputs):
@@ -67,8 +67,8 @@ class MlpBlock(nn.Module):
   """Transformer MLP / feed-forward block."""
 
   mlp_dim: int
-  dtype: Dtype = jnp.float32
-  param_dtype: Dtype = jnp.float32
+  dtype: Dtype = jnp.float16
+  param_dtype: Dtype = jnp.float16
   out_dim: Optional[int] = None
   dropout_rate: float = 0.1
   kernel_init: Callable[[PRNGKey, Shape, Dtype],
@@ -117,7 +117,7 @@ class Encoder1DBlock(nn.Module):
 
   mlp_dim: int
   num_heads: int
-  dtype: Dtype = jnp.float32
+  dtype: Dtype = jnp.float16
   dropout_rate: float = 0.1
   attention_dropout_rate: float = 0.1
 
