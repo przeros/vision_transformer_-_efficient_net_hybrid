@@ -135,7 +135,9 @@ class Encoder1DBlock(nn.Module):
 
     # Attention block.
     assert inputs.ndim == 3, f'Expected (batch, seq, hidden) got {inputs.shape}'
-    x = nn.LayerNorm(dtype=self.dtype)(inputs)
+    x = MBConv(inp=hidden_size, oup=hidden_size, stride=1, expand_ratio=1.0, use_se=True, dtype=self.dtype)(inputs)
+    x = MBConv(inp=hidden_size, oup=hidden_size, stride=1, expand_ratio=1.0, use_se=True, dtype=self.dtype)(x)
+    x = nn.LayerNorm(dtype=self.dtype)(x)
     x = nn.MultiHeadDotProductAttention(
         dtype=self.dtype,
         kernel_init=nn.initializers.xavier_uniform(),
